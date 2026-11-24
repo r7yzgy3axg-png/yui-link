@@ -106,6 +106,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .links{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:var(--muted);border-top:1px dashed var(--line);padding-top:6px;margin-top:4px}
 .links a{color:var(--muted)}
 .links .cr{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.links .lk{display:flex;gap:10px;flex:none}
 .empty-list{background:var(--surface);border:1px dashed var(--line);border-radius:16px;padding:28px;text-align:center;color:var(--muted)}
 footer{margin-top:32px;color:var(--muted);font-size:12px}
 
@@ -287,7 +288,11 @@ for (const s of DATA.spots) {
     const a = el('a', {href:s.file, target:'_blank', rel:'noopener', className:'cr', textContent:`写真: ${s.credit || '撮影者不明'}${s.license ? ' / '+s.license : ''}`});
     links.append(a);
   } else links.append(el('span', {textContent:'写真なし'}));
-  if (s.wiki) links.append(el('a', {href:s.wiki, target:'_blank', rel:'noopener', textContent:'Wikipedia'}));
+  const right = el('span', {className:'lk'});
+  const mq = s.cat === 'グルメ' ? `${s.where.split('・')[0]} ${s.name}` : `${s.name} ${p.name}`;
+  right.append(el('a', {href:'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(mq), target:'_blank', rel:'noopener', textContent: s.cat === 'グルメ' ? 'お店を探す' : '地図アプリ'}));
+  if (s.wiki) right.append(el('a', {href:s.wiki, target:'_blank', rel:'noopener', textContent:'Wikipedia'}));
+  links.append(right);
   const card = el('article', {className:'card', id:'c-'+s.id},
     ph, el('div', {className:'cb'}, meta, el('h3', {textContent:s.name}), el('p', {className:'d', textContent:s.desc}), el('div', {className:'vote'}, vbtn, voters), links));
   card.style.setProperty('--pc', p.color);
