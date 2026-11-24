@@ -1,0 +1,401 @@
+<title>西日本5県 旅の候補帳</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+<style>
+/* Layout: 左に動く地図（固定）、右に写真カード。上部に県・ジャンルの絞り込み。スマホは地図→カードの縦積み */
+:root{
+  --bg:#F2F4F3; --surface:#FFFFFF; --ink:#17212A; --muted:#5A6971; --line:#DCE2E3;
+  --sea:#D3E4EA; --land:#E9ECE6; --land-other:#E0E2DD; --accent:#D2462E; --accent-ink:#FFFFFF;
+  --c-zekkei:#1E8296; --c-rekishi:#A8392C; --c-machi:#6550A6; --c-onsen:#C9761F; --c-gourmet:#B8406F;
+  --shadow:0 1px 2px rgba(23,33,42,.06),0 4px 14px rgba(23,33,42,.06);
+  --f-display:"Shippori Mincho B1","Hiragino Mincho ProN","Yu Mincho",serif;
+  --f-body:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0F1519; --surface:#172028; --ink:#E6ECEE; --muted:#9AA9B0; --line:#2A3740;
+  --sea:#122630; --land:#26323A; --land-other:#1D272E; --accent:#EE6A4F; --accent-ink:#1A0F0C;
+  --c-zekkei:#3FB3C7; --c-rekishi:#E0705F; --c-machi:#A08EE0; --c-onsen:#E9A050; --c-gourmet:#E77AA4;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 4px 14px rgba(0,0,0,.25); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0F1519; --surface:#172028; --ink:#E6ECEE; --muted:#9AA9B0; --line:#2A3740;
+  --sea:#122630; --land:#26323A; --land-other:#1D272E; --accent:#EE6A4F; --accent-ink:#1A0F0C;
+  --c-zekkei:#3FB3C7; --c-rekishi:#E0705F; --c-machi:#A08EE0; --c-onsen:#E9A050; --c-gourmet:#E77AA4;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 4px 14px rgba(0,0,0,.25); color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.65;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 48px}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1440px;margin:0 auto}
+
+header.top{padding-block:28px 18px;display:flex;flex-wrap:wrap;gap:12px 32px;align-items:end;justify-content:space-between}
+.eyebrow{font-size:12px;letter-spacing:.18em;color:var(--muted);font-weight:700}
+h1{font-family:var(--f-display);font-weight:800;font-size:clamp(28px,4vw,44px);line-height:1.15;margin:4px 0 6px;text-wrap:balance}
+.lead{color:var(--muted);margin:0;max-width:60ch}
+.counts{display:flex;gap:8px;flex-wrap:wrap}
+.count{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;padding:4px 10px;border-radius:999px;background:var(--surface);border:1px solid var(--line)}
+.count i{width:9px;height:9px;border-radius:50%;background:var(--pc)}
+
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.toolbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:10px;border-bottom:1px solid var(--line);
+  display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 13px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px}
+.seg button i{width:9px;height:9px;border-radius:50%;background:var(--pc,var(--muted))}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.seg button[aria-pressed="true"] i{box-shadow:0 0 0 2px var(--bg)}
+.tools{display:flex;gap:10px;align-items:center;margin-left:auto;flex-wrap:wrap}
+.tools input[type=search]{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:6px 12px;width:180px;max-width:100%}
+.toggle{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap}
+.toggle input{accent-color:var(--accent);width:16px;height:16px}
+
+.layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:24px;margin-top:18px;align-items:start}
+.mapbox{position:sticky;top:calc(env(safe-area-inset-top,0px) + 68px);background:var(--sea);border-radius:18px;overflow:hidden;border:1px solid var(--line)}
+#map{display:block;width:100%;height:auto;max-height:calc(100vh - 110px);touch-action:manipulation}
+.sea{fill:var(--sea)}
+.land{fill:var(--land-other);stroke:var(--bg);stroke-width:.8;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+.land[class*="p-"]{fill:var(--land);stroke:var(--line);stroke-width:1.2}
+.land.focus{fill:color-mix(in srgb,var(--pc) 14%,var(--land))}
+.plabel{font-family:var(--f-display);font-weight:800;fill:var(--muted);opacity:.55;text-anchor:middle;font-size:26px;letter-spacing:.15em;pointer-events:none}
+.slabel{fill:var(--muted);opacity:.45;font-size:16px;letter-spacing:.4em;text-anchor:middle;pointer-events:none}
+.pin{cursor:pointer}
+.pin circle{stroke:var(--surface);transition:r .15s}
+.pin circle.ring{stroke:none}
+.pin.voted circle.ring{fill:none;stroke:var(--accent);stroke-width:2.2}
+.pin.dim{opacity:.13;pointer-events:none}
+.pin.hot circle.dot{stroke:var(--ink)}
+.maptip{position:absolute;pointer-events:none;background:var(--ink);color:var(--bg);font-size:13px;font-weight:700;padding:4px 10px;border-radius:8px;transform:translate(-50%,calc(-100% - 12px));white-space:nowrap}
+.mapcap{position:absolute;left:12px;bottom:10px;display:flex;gap:10px;flex-wrap:wrap;font-size:12px;font-weight:700;background:color-mix(in srgb,var(--surface) 88%,transparent);padding:6px 10px;border-radius:10px}
+.mapcap span{display:flex;align-items:center;gap:5px}
+.mapcap i{width:10px;height:10px;border-radius:50%;background:var(--cc)}
+.reset{position:absolute;right:12px;top:12px;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:4px 10px;font-size:13px;font-weight:700;cursor:pointer}
+
+.rank{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px 18px;margin-bottom:18px}
+.rank h2{font-family:var(--f-display);font-size:20px;margin:0 0 2px}
+.rank .sub{color:var(--muted);font-size:13px;margin:0 0 10px}
+.rank ol{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.rank li{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:10px;align-items:center;cursor:pointer;padding:4px 6px;border-radius:8px}
+.rank li:hover{background:var(--bg)}
+.rank .n{font-variant-numeric:tabular-nums;font-weight:700;color:var(--muted);text-align:right}
+.rank .nm{font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rank .who{font-size:12px;color:var(--muted);font-weight:500;margin-left:6px}
+.rank .v{font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums}
+.rank .empty{color:var(--muted);font-size:14px}
+.note{font-size:12.5px;color:var(--muted);margin:10px 0 0}
+
+.resultbar{display:flex;justify-content:space-between;align-items:baseline;margin:0 2px 10px;color:var(--muted);font-size:13px;font-weight:700}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden;display:flex;flex-direction:column;box-shadow:var(--shadow);transition:border-color .15s,transform .15s;scroll-margin-top:80px}
+.card.hot{border-color:var(--accent);transform:translateY(-2px)}
+.ph{position:relative;aspect-ratio:16/10;max-width:100%;background:color-mix(in srgb,var(--pc) 16%,var(--surface));overflow:hidden}
+.ph img{width:100%;height:100%;object-fit:cover;display:block}
+.ph .noimg{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--f-display);font-weight:800;font-size:22px;color:var(--pc);opacity:.7;padding:12px;text-align:center}
+.badge{position:absolute;left:10px;top:10px;background:var(--pc);color:#fff;font-size:12px;font-weight:700;padding:2px 10px;border-radius:999px}
+.cb{padding:12px 14px 12px;display:flex;flex-direction:column;gap:6px;flex:1;min-width:0}
+.meta{display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--muted);font-weight:700;flex-wrap:wrap}
+.cat{color:var(--cc);border:1.5px solid var(--cc);border-radius:6px;padding:0 7px;font-size:12px}
+.card h3{font-size:17.5px;margin:0;line-height:1.35}
+.card p.d{margin:0;font-size:14px;color:var(--ink);opacity:.86;flex:1}
+.vote{display:flex;align-items:center;gap:8px;margin-top:4px;flex-wrap:wrap}
+.vbtn{display:flex;align-items:center;gap:6px;border:1.5px solid var(--line);background:transparent;border-radius:999px;padding:3px 12px 3px 9px;font-weight:700;font-size:13.5px;cursor:pointer}
+.vbtn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2}
+.vbtn[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.vbtn[aria-pressed="true"] svg{fill:currentColor}
+.voters{font-size:12px;color:var(--muted);min-width:0}
+.links{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:var(--muted);border-top:1px dashed var(--line);padding-top:6px;margin-top:4px}
+.links a{color:var(--muted)}
+.links .cr{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.empty-list{background:var(--surface);border:1px dashed var(--line);border-radius:16px;padding:28px;text-align:center;color:var(--muted)}
+footer{margin-top:32px;color:var(--muted);font-size:12px}
+
+@media (max-width:900px){
+  .layout{grid-template-columns:minmax(0,1fr)}
+  .mapbox{position:relative;top:0}
+  .toolbar{position:static}
+  #map{max-height:70vh}
+  .tools{margin-left:0}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+<header class="top">
+  <div>
+    <div class="eyebrow">福岡・広島・山口・島根・鳥取</div>
+    <h1>西日本5県 旅の候補帳</h1>
+    <p class="lead">観光名所とご当地グルメを地図と写真でまとめました。気になる場所に「行きたい」を押すと、みんなの票が集まって行き先を決めやすくなります。</p>
+  </div>
+  <div class="counts" id="counts"></div>
+</header>
+
+<div class="toolbar">
+  <div class="seg" id="prefSeg" role="group" aria-label="県で絞り込む"></div>
+  <div class="seg" id="catSeg" role="group" aria-label="ジャンルで絞り込む"></div>
+  <div class="tools">
+    <input type="search" id="q" placeholder="名前で探す" aria-label="名前で探す">
+    <label class="toggle"><input type="checkbox" id="onlyVoted">行きたいだけ表示</label>
+  </div>
+</div>
+
+<div class="layout">
+  <div class="mapbox" id="mapbox">
+    <!--MAP-->
+    <button class="reset" id="reset" hidden>5県全体に戻る</button>
+    <div class="mapcap" id="mapcap"></div>
+    <div class="maptip" id="tip" hidden></div>
+  </div>
+  <div>
+    <section class="rank" aria-labelledby="rankH">
+      <h2 id="rankH">みんなの行きたいランキング</h2>
+      <p class="sub" id="rankSub">票が多い順に並びます。名前を押すとその場所へ移動します。</p>
+      <ol id="rankList"></ol>
+      <p class="note" id="syncNote">票を読み込んでいます…</p>
+    </section>
+    <div class="resultbar"><span id="resultCount"></span><span>写真をクリックすると地図で場所がわかります</span></div>
+    <div class="cards" id="cards"></div>
+  </div>
+</div>
+<footer>
+  写真はWikimedia Commonsの自由ライセンス画像を使用しています。撮影者とライセンスは各カード下部に記載しています。営業時間・料金・季節の開催状況は訪れる前に公式情報で確認してください。
+</footer>
+</div>
+
+<script>
+const DATA = /*DATA*/null;
+const CATCOL = {'絶景':'--c-zekkei','歴史':'--c-rekishi','街歩き':'--c-machi','温泉':'--c-onsen','グルメ':'--c-gourmet'};
+const state = {pref:'all', cat:'all', q:'', onlyVoted:false, hot:null};
+let votes = {};      // spotId -> [userId]
+let myId = null, myPicks = new Set(), shared = false, db = null, user = null, names = {};
+const $ = s => document.querySelector(s);
+const el = (tag, props={}, ...kids) => { const e = document.createElement(tag); Object.assign(e, props); for (const k of kids) if (k != null) e.append(k); return e; };
+const byId = Object.fromEntries(DATA.spots.map(s => [s.id, s]));
+
+/* ---------- 絞り込みボタン ---------- */
+function segButton(label, val, key, color){
+  const b = el('button', {type:'button'});
+  if (color) { b.style.setProperty('--pc', color); b.append(el('i')); }
+  b.append(label); b.dataset.v = val;
+  b.onclick = () => { state[key] = val; if (key === 'pref') zoomTo(val); render(); };
+  return b;
+}
+const prefSeg = $('#prefSeg'), catSeg = $('#catSeg');
+prefSeg.append(segButton('5県すべて', 'all', 'pref'));
+for (const [k, p] of Object.entries(DATA.prefs)) prefSeg.append(segButton(p.short, k, 'pref', p.color));
+catSeg.append(segButton('全ジャンル', 'all', 'cat'));
+for (const c of DATA.cats) catSeg.append(segButton(c, c, 'cat', `var(${CATCOL[c]})`));
+for (const [k, p] of Object.entries(DATA.prefs)) {
+  const n = DATA.spots.filter(s => s.pref === k).length;
+  const c = el('span', {className:'count'}); c.style.setProperty('--pc', p.color); c.append(el('i'), `${p.short} ${n}`);
+  $('#counts').append(c);
+}
+for (const c of DATA.cats) { const s = el('span'); s.style.setProperty('--cc', `var(${CATCOL[c]})`); s.append(el('i'), c); $('#mapcap').append(s); }
+$('#q').addEventListener('input', e => { state.q = e.target.value.trim(); render(); });
+$('#onlyVoted').addEventListener('change', e => { state.onlyVoted = e.target.checked; render(); });
+$('#reset').onclick = () => { state.pref = 'all'; zoomTo('all'); render(); };
+
+/* ---------- 地図 ---------- */
+const svg = $('#map'), NS = 'http://www.w3.org/2000/svg';
+let vb = DATA.full.slice(), anim = null;
+function zoomTo(pref){
+  let t = DATA.full.slice();
+  if (pref !== 'all') {
+    const [x0,y0,x1,y1] = DATA.prefs[pref].box; const pw = (x1-x0)*.12, ph = (y1-y0)*.12;
+    t = [x0-pw, y0-ph, x1-x0+2*pw, y1-y0+2*ph];
+    const ar = DATA.full[2]/DATA.full[3];          // 地図枠の比率に合わせる
+    if (t[2]/t[3] > ar) { const h = t[2]/ar; t[1] -= (h-t[3])/2; t[3] = h; } else { const w = t[3]*ar; t[0] -= (w-t[2])/2; t[2] = w; }
+  }
+  document.querySelectorAll('.land').forEach(p => { p.classList.remove('focus'); p.style.removeProperty('--pc'); });
+  if (pref !== 'all') { const p = document.querySelector('.p-'+pref); p.classList.add('focus'); p.style.setProperty('--pc', DATA.prefs[pref].color); }
+  $('#reset').hidden = pref === 'all';
+  const from = vb.slice(), start = performance.now(), dur = matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 450;
+  cancelAnimationFrame(anim);
+  const step = now => {
+    const k = dur ? Math.min(1, (now-start)/dur) : 1, e = 1 - Math.pow(1-k, 3);
+    vb = from.map((v,i) => v + (t[i]-v)*e);
+    svg.setAttribute('viewBox', vb.join(' ')); sizePins();
+    if (k < 1) anim = requestAnimationFrame(step);
+  };
+  anim = requestAnimationFrame(step);
+}
+const pinsG = $('#pins'); const pinEls = {};
+for (const s of DATA.spots) {
+  const g = document.createElementNS(NS, 'g'); g.classList.add('pin'); g.setAttribute('tabindex','0');
+  g.setAttribute('role','button'); g.setAttribute('aria-label', s.name);
+  const ring = document.createElementNS(NS,'circle'); ring.classList.add('ring'); ring.setAttribute('cx',s.x); ring.setAttribute('cy',s.y); ring.setAttribute('fill','none');
+  const dot = document.createElementNS(NS,'circle'); dot.classList.add('dot'); dot.setAttribute('cx',s.x); dot.setAttribute('cy',s.y);
+  dot.style.fill = `var(${CATCOL[s.cat]})`;
+  g.append(ring, dot); pinsG.append(g); pinEls[s.id] = g;
+  g.addEventListener('mouseenter', () => setHot(s.id, false));
+  g.addEventListener('mouseleave', () => setHot(null));
+  g.addEventListener('focus', () => setHot(s.id, false));
+  g.addEventListener('click', () => focusCard(s.id));
+  g.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); focusCard(s.id); } });
+}
+function sizePins(){
+  const px = svg.getBoundingClientRect().width || 600;
+  const scale = vb[2] / px * (px < 600 ? .7 : .9);  // 画面上で一定の大きさに保つ
+  for (const g of Object.values(pinEls)) {
+    const [ring, dot] = g.children; const hot = g.classList.contains('hot');
+    dot.setAttribute('r', (hot ? 9 : 6) * scale); dot.style.strokeWidth = 1.6 * scale;
+    ring.setAttribute('r', 10.5 * scale); ring.style.strokeWidth = 2.2 * scale;
+  }
+}
+function showTip(id){
+  const tip = $('#tip');
+  if (!id) { tip.hidden = true; return; }
+  const s = byId[id], r = svg.getBoundingClientRect(), box = $('#mapbox').getBoundingClientRect();
+  const sc = Math.min(r.width / vb[2], r.height / vb[3]);
+  const ox = (r.width - vb[2]*sc)/2, oy = (r.height - vb[3]*sc)/2;
+  tip.textContent = s.name; tip.hidden = false;
+  tip.style.left = (r.left - box.left + ox + (s.x - vb[0]) * sc) + 'px';
+  tip.style.top = (r.top - box.top + oy + (s.y - vb[1]) * sc) + 'px';
+}
+function setHot(id){
+  if (state.hot) { pinEls[state.hot]?.classList.remove('hot'); document.getElementById('c-'+state.hot)?.classList.remove('hot'); }
+  state.hot = id;
+  if (id) { pinEls[id].classList.add('hot'); pinsG.append(pinEls[id]); document.getElementById('c-'+id)?.classList.add('hot'); }
+  sizePins(); showTip(id);
+}
+function focusCard(id){
+  const s = byId[id];
+  if (!matches(s)) { state.cat = 'all'; state.q = ''; $('#q').value = ''; state.onlyVoted = false; $('#onlyVoted').checked = false; }
+  if (state.pref !== 'all' && state.pref !== s.pref) { state.pref = s.pref; zoomTo(s.pref); }
+  render(); setHot(id);
+  document.getElementById('c-'+id)?.scrollIntoView({behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block:'center'});
+}
+
+/* ---------- カード ---------- */
+const heart = () => { const s = document.createElementNS(NS,'svg'); s.setAttribute('viewBox','0 0 24 24'); s.setAttribute('aria-hidden','true');
+  const p = document.createElementNS(NS,'path'); p.setAttribute('d','M12 20.5s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.6a4.3 4.3 0 0 1 7.5 2.7c0 5.6-7.5 10.2-7.5 10.2z'); s.append(p); return s; };
+const cardEls = {};
+for (const s of DATA.spots) {
+  const p = DATA.prefs[s.pref];
+  const ph = el('div', {className:'ph'});
+  if (s.img) ph.append(el('img', {src:s.img, alt:s.name, loading:'lazy', decoding:'async'}));
+  else ph.append(el('div', {className:'noimg', textContent:s.name}));
+  ph.append(el('span', {className:'badge', textContent:p.short}));
+  ph.style.cursor = 'pointer';
+  ph.onclick = () => { if (state.pref === 'all' || state.pref === s.pref) {} setHot(s.id); };
+  const cat = el('span', {className:'cat', textContent:s.cat}); cat.style.setProperty('--cc', `var(${CATCOL[s.cat]})`);
+  const meta = el('div', {className:'meta'}, cat, s.time ? `目安 ${s.time}` : `${s.where}で`);
+  const vbtn = el('button', {type:'button', className:'vbtn'}); vbtn.append(heart(), el('span', {className:'vl', textContent:'行きたい'}), el('span', {className:'vn'}));
+  vbtn.onclick = () => toggleVote(s.id);
+  const voters = el('span', {className:'voters'});
+  const links = el('div', {className:'links'});
+  if (s.img) {
+    const a = el('a', {href:s.file, target:'_blank', rel:'noopener', className:'cr', textContent:`写真: ${s.credit || '撮影者不明'}${s.license ? ' / '+s.license : ''}`});
+    links.append(a);
+  } else links.append(el('span', {textContent:'写真なし'}));
+  if (s.wiki) links.append(el('a', {href:s.wiki, target:'_blank', rel:'noopener', textContent:'Wikipedia'}));
+  const card = el('article', {className:'card', id:'c-'+s.id},
+    ph, el('div', {className:'cb'}, meta, el('h3', {textContent:s.name}), el('p', {className:'d', textContent:s.desc}), el('div', {className:'vote'}, vbtn, voters), links));
+  card.style.setProperty('--pc', p.color);
+  card.addEventListener('mouseenter', () => setHot(s.id));
+  card.addEventListener('mouseleave', () => setHot(null));
+  cardEls[s.id] = {card, vbtn, voters};
+}
+
+function matches(s){
+  if (state.pref !== 'all' && s.pref !== state.pref) return false;
+  if (state.cat !== 'all' && s.cat !== state.cat) return false;
+  if (state.q && !(s.name + s.desc + (s.where||'')).includes(state.q)) return false;
+  if (state.onlyVoted && !(votes[s.id]?.length)) return false;
+  return true;
+}
+function voterNames(id){ return (votes[id] || []).map(u => u === myId ? 'あなた' : (names[u] || '誰か')); }
+
+function render(){
+  prefSeg.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === state.pref));
+  catSeg.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === state.cat));
+  const list = $('#cards'); list.replaceChildren();
+  let n = 0;
+  // 票が多い順 → 元の順
+  const order = DATA.spots.slice().sort((a,b) => (votes[b.id]?.length||0) - (votes[a.id]?.length||0));
+  for (const s of (state.onlyVoted ? order : DATA.spots)) {
+    const ok = matches(s);
+    pinEls[s.id].classList.toggle('dim', !ok);
+    pinEls[s.id].classList.toggle('voted', !!votes[s.id]?.length);
+    if (!ok) continue;
+    n++;
+    const c = cardEls[s.id], cnt = votes[s.id]?.length || 0, mine = myPicks.has(s.id);
+    c.vbtn.setAttribute('aria-pressed', mine);
+    c.vbtn.querySelector('.vn').textContent = cnt ? cnt : '';
+    c.voters.textContent = cnt ? voterNames(s.id).join('・') : '';
+    list.append(c.card);
+  }
+  if (!n) list.append(el('div', {className:'empty-list', textContent: state.onlyVoted ? 'まだ「行きたい」が付いた場所はありません。カードのボタンを押してみてください。' : '条件に合う場所がありません。絞り込みを変えてみてください。'}));
+  $('#resultCount').textContent = `${n}件を表示中`;
+  sizePins();
+  renderRank();
+}
+function renderRank(){
+  const ol = $('#rankList'); ol.replaceChildren();
+  const ranked = Object.entries(votes).filter(([,v]) => v.length).sort((a,b) => b[1].length - a[1].length).slice(0, 10);
+  if (!ranked.length) { const li = el('li', {className:'empty', textContent:'まだ票がありません。カードの「行きたい」を押すと、ここに並びます。'}); li.style.display = 'block'; li.style.cursor = 'default'; ol.append(li); return; }
+  ranked.forEach(([id, v], i) => {
+    const s = byId[id]; if (!s) return;
+    const nm = el('span', {className:'nm'}, s.name, el('span', {className:'who', textContent: `${DATA.prefs[s.pref].short}・${voterNames(id).join('、')}`}));
+    const li = el('li', {}, el('span', {className:'n', textContent: i+1}), nm, el('span', {className:'v', textContent:`${v.length}票`}));
+    li.onclick = () => focusCard(id);
+    ol.append(li);
+  });
+}
+
+/* ---------- 票（共有） ---------- */
+const LS = 'tabi-kouho-picks';
+function loadLocal(){ try { return JSON.parse(localStorage.getItem(LS) || '[]'); } catch { return []; } }
+function saveLocal(){ try { localStorage.setItem(LS, JSON.stringify([...myPicks])); } catch {} }
+let writing = false, pendingWrite = false;
+async function toggleVote(id){
+  if (myPicks.has(id)) myPicks.delete(id); else myPicks.add(id);
+  if (!shared) {
+    votes = {}; for (const p of myPicks) votes[p] = ['me']; myId = 'me';
+    saveLocal(); render(); return;
+  }
+  const mine = myPicks.has(id); const arr = new Set(votes[id] || []);
+  mine ? arr.add(myId) : arr.delete(myId); votes[id] = [...arr];   // 先に画面へ反映
+  render(); writeMine();
+}
+async function writeMine(){
+  if (writing) { pendingWrite = true; return; }
+  writing = true;
+  try { await db.collection('picks').doc(myId).set({spots:[...myPicks], updatedAt: Date.now()}); $('#syncNote').textContent = '票はこのページを開いた全員で共有されています。'; }
+  catch (e) { $('#syncNote').textContent = '票を保存できませんでした（閲覧のみの権限かもしれません）。'; }
+  writing = false;
+  if (pendingWrite) { pendingWrite = false; writeMine(); }
+}
+async function resolveNames(){
+  if (!user) return;
+  const ids = [...new Set(Object.values(votes).flat())].filter(u => u !== myId && !(u in names));
+  if (!ids.length) return;
+  try { const ps = await user.profiles(ids); for (const id of ids) names[id] = ps?.[id]?.name || ''; render(); } catch {}
+}
+async function connect(){
+  const timer = setTimeout(() => { if (!shared) $('#syncNote').textContent = '票の共有につながりませんでした。この端末にだけ保存します。'; }, 10000);
+  try {
+    db = await window.claude?.use?.('db');
+    user = await window.claude?.use?.('user');
+    if (!db || !user) throw 0;
+    myId = await user.id();
+    if (!myId) throw 0;
+    shared = true;
+    db.collection('picks').onSnapshot(snap => {
+      clearTimeout(timer);
+      const v = {};
+      for (const d of snap.docs) { const sp = d.data()?.spots; if (Array.isArray(sp)) for (const id of sp) if (byId[id]) (v[id] ||= []).push(d.id); }
+      votes = v;
+      if (!writing && !pendingWrite) myPicks = new Set(Object.keys(v).filter(id => v[id].includes(myId)));
+      $('#syncNote').textContent = '票はこのページを開いた全員で共有されています。';
+      render(); resolveNames();
+    }, () => { clearTimeout(timer); $('#syncNote').textContent = '票を読み込めませんでした。時間をおいて開き直してください。'; });
+  } catch {
+    clearTimeout(timer);
+    shared = false; myPicks = new Set(loadLocal()); votes = {}; for (const p of myPicks) votes[p] = ['me']; myId = 'me';
+    $('#syncNote').textContent = 'ログインしていないため、票はこの端末にだけ保存されます。';
+    render();
+  }
+}
+render(); zoomTo('all'); connect();
+window.addEventListener('resize', () => { sizePins(); showTip(state.hot); });
+</script>
